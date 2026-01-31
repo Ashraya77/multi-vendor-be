@@ -1,87 +1,166 @@
-multer-vendor-be/
-│
-├── src/
-│   ├── domain/
-│   │   ├── entities/
-│   │   │   ├── vendor.entity.ts
-│   │   │   ├── product.entity.ts
-│   │   │   └── user.entity.ts
-│   │   │
-│   │   └── repositories/
-│   │       ├── vendor.repository.ts
-│   │       └── product.repository.ts
-│   │
-│   ├── application/
-│   │   ├── vendor/
-│   │   │   └── vendor.service.ts
-│   │   ├── product/
-│   │   │   └── product.service.ts
-│   │   └── file/
-│   │       └── file.service.ts
-│   │
-│   ├── infrastructure/
-│   │   ├── database/
-│   │   │   ├── entities/
-│   │   │   │   ├── vendor.entity.ts
-│   │   │   │   └── product.entity.ts
-│   │   │   │
-│   │   │   ├── repositories/
-│   │   │   │   ├── vendor.repository.ts
-│   │   │   │   └── product.repository.ts
-│   │   │   │
-│   │   │   └── migrations/
-│   │   │
-│   │   └── storage/
-│   │       ├── multer.config.ts
-│   │       └── storage.service.ts
-│   │
-│   ├── presentation/
-│   │   ├── vendor/
-│   │   │   ├── vendor.controller.ts
-│   │   │   ├── dto/
-│   │   │   │   ├── create-vendor.dto.ts
-│   │   │   │   └── update-vendor.dto.ts
-│   │   │   └── vendor.module.ts
-│   │   │
-│   │   └── product/
-│   │       ├── product.controller.ts
-│   │       ├── dto/
-│   │       │   ├── create-product.dto.ts
-│   │       │   └── update-product.dto.ts
-│   │       └── product.module.ts
-│   │
-│   ├── common/
-│   │   ├── guards/
-│   │   ├── interceptors/
-│   │   ├── filters/
-│   │   ├── decorators/
-│   │   └── pipes/
-│   │
-│   ├── config/
-│   │   ├── database.config.ts
-│   │   ├── storage.config.ts
-│   │   └── app.config.ts
-│   │
-│   ├── app.module.ts
-│   └── main.ts
-│
-├── test/
-│   ├── vendor.e2e-spec.ts
-│   └── product.e2e-spec.ts
-│
-├── uploads/
-│
-├── .env.example
-├── .gitignore
-├── docker-compose.yml
-├── Dockerfile
-├── package.json
-└── tsconfig.json
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
 
-Layer Responsibilities
-domain/ - Business entities and repository interfaces
-application/ - Business logic services
-infrastructure/ - Database, file storage, external services
-presentation/ - Controllers, DTOs, modules
-common/ - Shared guards, pipes, filters, interceptors
-config/ - Configuration files
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  password  String
+  role      Role     @default(USER)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  seller    Seller?
+  orders    Order[]
+  cartItems CartItem[]
+  reviews   Review[]
+
+  @@index([email])
+}
+
+model Seller {
+  id          String   @id @default(cuid())
+  userId      String   @unique
+  businessName String?
+  phone       String?
+  isVerified  Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  user  User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  shops Shop[]
+
+  @@index([userId])
+}
+
+model Shop {
+  id          String   @id @default(cuid())
+  sellerId    String
+  name        String
+  description String?
+  logo        String?
+  address     String?
+  phone       String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  seller   Seller    @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+  products Product[]
+
+  @@index([sellerId])
+}
+
+model Product {
+  id          String   @id @default(cuid())
+  shopId      String
+  name        String
+  description String?
+  price       Decimal  @db.Decimal(10, 2)
+  stock       Int      @default(0)
+  images      String[]
+  category    String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  shop       Shop         @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  cartItems  CartItem[]
+  orderItems OrderItem[]
+  reviews    Review[]
+
+  @@index([shopId])
+  @@index([category])
+}
+
+model CartItem {
+  id        String   @id @default(cuid())
+  userId    String
+  productId String
+  quantity  Int      @default(1)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, productId])
+  @@index([userId])
+  @@index([productId])
+}
+
+model Order {
+  id          String      @id @default(cuid())
+  userId      String
+  totalAmount Decimal     @db.Decimal(10, 2)
+  status      OrderStatus @default(PENDING)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  // Relations
+  user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  orderItems OrderItem[]
+
+  @@index([userId])
+  @@index([status])
+}
+
+model OrderItem {
+  id        String  @id @default(cuid())
+  orderId   String
+  productId String
+  quantity  Int
+  price     Decimal @db.Decimal(10, 2)
+
+  // Relations
+  order   Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id], onDelete: Restrict)
+
+  @@index([orderId])
+  @@index([productId])
+}
+
+model Review {
+  id        String   @id @default(cuid())
+  userId    String
+  productId String
+  rating    Int
+  comment   String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, productId])
+  @@index([productId])
+}
+
+enum Role {
+  USER
+  SELLER
+  ADMIN
+}
+
+enum OrderStatus {
+  PENDING
+  PROCESSING
+  SHIPPED
+  DELIVERED
+  CANCELLED
+}
