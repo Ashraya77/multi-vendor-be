@@ -1,6 +1,8 @@
 import {
   ConflictException,
   ForbiddenException,
+  HttpException,
+  HttpStatus,
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
@@ -12,21 +14,16 @@ import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { PrismaClientInitializationError } from '@prisma/client/runtime/library';
 import { SignupResponseDto } from './dto/SignupResponse';
+import { LoginDto } from './dto/Logindata.dto';
+import { UsersService } from 'src/users/users.service';
 @Injectable()
 export class AuthService {
   constructor(
     private prisma: PrismaService,
     private jwtService: JwtService,
     private configService: ConfigService,
+    private usersService: UsersService,
   ) {}
-
-  private hashData(data: string): Promise<string> {
-    return bcrypt.hash(data, 10);
-  }
-
-  private async verifyHash(data: string, hash: string): Promise<boolean> {
-    return await bcrypt.compare(data, hash);
-  }
 
   async signupLocal(dto: AuthDto): Promise<SignupResponseDto> {
     try {
@@ -41,6 +38,7 @@ export class AuthService {
       if (existingUser) {
         throw new ConflictException('Email already in use');
       }
+
       const hash = await this.hashData(dto.password);
       const newUser = await this.prisma.user.create({
         data: {
@@ -88,6 +86,7 @@ export class AuthService {
       },
     });
   }
+
   async getTokens(userId: number, email: string): Promise<Tokens> {
     const [at, rt] = await Promise.all([
       this.jwtService.signAsync(
@@ -116,8 +115,57 @@ export class AuthService {
       refresh_token: rt,
     };
   }
-  signinLocal() {}
 
+  async signinLocal(dto: LoginDto): Promise<SignupResponseDto> {
+    try {
+      const user = await this.usersService.getByEmail(dto.email);
+      await this.verifyPassword(dto.password, user.password);
+
+      const tokens = await this.getTokens(user.id, user.email);
+      await this.updateRtHash(user.id, tokens.refresh_token);
+
+      return {
+        tokens: {
+          accessToken: tokens.access_token,
+          refreshToken: tokens.refresh_token,
+        },
+        user: {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+          createdAt: user.createdAt,
+        },
+      };
+    } catch (error) {
+      throw new HttpException(
+        'Wrong credentials provided',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+  }
+
+  private async verifyPassword(
+    plainTextPassword: string,
+    hashedPassword: string,
+  ) {
+    const isPasswordMatching = await this.verifyHash(
+      plainTextPassword,
+      hashedPassword,
+    );
+    if (!isPasswordMatching) {
+      throw new HttpException(
+        'Wrong credentials provided',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+  }
+  private hashData(data: string): Promise<string> {
+    return bcrypt.hash(data, 10);
+  }
+
+  private async verifyHash(data: string, hash: string): Promise<boolean> {
+    return await bcrypt.compare(data, hash);
+  }
   logout() {}
 
   refreshTokens() {}
