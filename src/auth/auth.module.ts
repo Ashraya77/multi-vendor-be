@@ -6,9 +6,18 @@ import { PrismaModule } from 'src/prisma/prisma.module';
 import { ConfigModule } from '@nestjs/config';
 import { UsersModule } from 'src/users/users.module';
 import { UsersService } from 'src/users/users.service';
+import { RtStrategy } from './strategies';
 @Module({
-  imports: [JwtModule.register({}), PrismaModule, ConfigModule, UsersModule],
+  imports: [
+    JwtModule.register({
+      secret: 'rt-secret',
+      signOptions: { expiresIn: '7d' },
+    }),
+    PrismaModule,
+    ConfigModule,
+    UsersModule,
+  ],
   controllers: [AuthController],
-  providers: [AuthService, UsersService],
+  providers: [AuthService, UsersService, RtStrategy],
 })
 export class AuthModule {}

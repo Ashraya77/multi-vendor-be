@@ -26,6 +26,7 @@ export class AuthService {
   ) {}
 
   async signupLocal(dto: AuthDto): Promise<SignupResponseDto> {
+    console.log("hellow world")
     try {
       const normalizedEmail = dto.email.toLowerCase().trim();
 
@@ -60,8 +61,9 @@ export class AuthService {
         },
         user: {
           id: newUser.id,
-          email: newUser.email,
           name: newUser.name,
+          email: newUser.email,
+          role: newUser.role,
           createdAt: newUser.createdAt,
         },
       };
@@ -75,6 +77,35 @@ export class AuthService {
     }
   }
 
+  async signinLocal(dto: LoginDto): Promise<SignupResponseDto> {
+    try {
+      const user = await this.usersService.getByEmail(dto.email);
+      await this.verifyPassword(dto.password, user.password);
+
+      const tokens = await this.getTokens(user.id, user.email);
+      await this.updateRtHash(user.id, tokens.refresh_token);
+
+      return {
+        tokens: {
+          accessToken: tokens.access_token,
+          refreshToken: tokens.refresh_token,
+        },
+        user: {
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          role: user.role,
+
+          createdAt: user.createdAt,
+        },
+      };
+    } catch (error) {
+      throw new HttpException(
+        'Wrong credentials provided',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+  }
   async updateRtHash(userId: number, rt: string) {
     const hash = await this.hashData(rt);
     await this.prisma.user.update({
@@ -116,34 +147,6 @@ export class AuthService {
     };
   }
 
-  async signinLocal(dto: LoginDto): Promise<SignupResponseDto> {
-    try {
-      const user = await this.usersService.getByEmail(dto.email);
-      await this.verifyPassword(dto.password, user.password);
-
-      const tokens = await this.getTokens(user.id, user.email);
-      await this.updateRtHash(user.id, tokens.refresh_token);
-
-      return {
-        tokens: {
-          accessToken: tokens.access_token,
-          refreshToken: tokens.refresh_token,
-        },
-        user: {
-          id: user.id,
-          email: user.email,
-          name: user.name,
-          createdAt: user.createdAt,
-        },
-      };
-    } catch (error) {
-      throw new HttpException(
-        'Wrong credentials provided',
-        HttpStatus.BAD_REQUEST,
-      );
-    }
-  }
-
   private async verifyPassword(
     plainTextPassword: string,
     hashedPassword: string,
@@ -166,7 +169,25 @@ export class AuthService {
   private async verifyHash(data: string, hash: string): Promise<boolean> {
     return await bcrypt.compare(data, hash);
   }
+
   logout() {}
 
-  refreshTokens() {}
+  async refreshTokens(userId: number, rt: string) {
+    const user = await this.prisma.user.findUnique({
+      where: {
+        id: userId,
+      },
+    });
+    if (!user) throw new ForbiddenException('Access Denied');
+    console.log('Incoming RT:', rt);
+  console.log('DB hashedRt:', user.hashedRt);
+
+    const rtMatches = await bcrypt.compare(rt, user.hashedRt);
+
+    if (!rtMatches) throw new ForbiddenException('Access Denied');
+
+    const tokens = await this.getTokens(user.id, user.email);
+    await this.updateRtHash(user.id, tokens.refresh_token);
+    return tokens;
+  }
 }

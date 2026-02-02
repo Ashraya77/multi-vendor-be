@@ -6,9 +6,20 @@ import { UsersModule } from './users/users.module';
 import { SellerModule } from './seller/seller.module';
 import { PrismaService } from './prisma/prisma.service';
 import { ProductsModule } from './products/products.module';
+import { PassportModule } from '@nestjs/passport';
+import { ConfigModule } from '@nestjs/config';
 
 @Module({
-  imports: [AuthModule, UsersModule, SellerModule, ProductsModule],
+  imports: [
+    ConfigModule.forRoot({
+      isGlobal: true,
+    }),
+    AuthModule,
+    UsersModule,
+    SellerModule,
+    ProductsModule,
+    PassportModule.register({ defaultStrategy: 'jwt' }),
+  ],
   controllers: [AppController],
   providers: [AppService, PrismaService],
 })

@@ -1,3 +1,4 @@
+import { Role } from '@prisma/client';
 import {
   IsNotEmpty,
   IsString,
@@ -6,12 +7,6 @@ import {
   IsEnum,
   IsOptional,
 } from 'class-validator';
-
-export enum UserRole {
-  USER = 'user',
-  SELLER = 'seller',
-  ADMIN = 'admin',
-}
 
 export class AuthDto {
   @IsOptional()
@@ -29,6 +24,6 @@ export class AuthDto {
   password: string;
 
   @IsOptional()
-  @IsEnum(UserRole, { message: 'Role must be one of: user, seller, admin' })
-  role?: UserRole;
+  @IsEnum(Role, { message: 'Role must be one of: user, seller, admin' })
+  role?: Role;
 }
