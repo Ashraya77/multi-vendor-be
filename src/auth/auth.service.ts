@@ -26,7 +26,6 @@ export class AuthService {
   ) {}
 
   async signupLocal(dto: AuthDto): Promise<SignupResponseDto> {
-    console.log("hellow world")
     try {
       const normalizedEmail = dto.email.toLowerCase().trim();
 
@@ -170,7 +169,19 @@ export class AuthService {
     return await bcrypt.compare(data, hash);
   }
 
-  logout() {}
+  async logout(userId: number) {
+    await this.prisma.user.updateMany({
+      where: {
+        id: userId,
+        hashedRt: {
+          not: null,
+        },
+      },
+      data: {
+        hashedRt: null,
+      },
+    });
+  }
 
   async refreshTokens(userId: number, rt: string) {
     const user = await this.prisma.user.findUnique({
@@ -179,8 +190,6 @@ export class AuthService {
       },
     });
     if (!user) throw new ForbiddenException('Access Denied');
-    console.log('Incoming RT:', rt);
-  console.log('DB hashedRt:', user.hashedRt);
 
     const rtMatches = await bcrypt.compare(rt, user.hashedRt);
 

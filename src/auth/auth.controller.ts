@@ -1,4 +1,12 @@
-import { Controller, Post, Body, UseGuards, Req } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  UseGuards,
+  Req,
+  HttpCode,
+  HttpStatus,
+} from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { AuthDto } from './dto/auth.dto';
 import { SignupResponseDto } from './dto/SignupResponse';
@@ -11,18 +19,24 @@ export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @Post('/local/signup')
+  @HttpCode(HttpStatus.CREATED)
   async signupLocal(@Body() dto: AuthDto): Promise<SignupResponseDto> {
     return await this.authService.signupLocal(dto);
   }
 
   @Post('/local/signin')
+  @HttpCode(HttpStatus.OK)
   async signinLocal(@Body() dto: LoginDto) {
     return await this.authService.signinLocal(dto);
   }
 
   @Post('/logout')
-  logout() {
-    this.authService.logout();
+  @UseGuards(AuthGuard('jwt'))
+  @HttpCode(HttpStatus.OK)
+  async logout(@Req() req: Request) {
+    const user = req.user!;
+
+    return await this.authService.logout(user['id']);
   }
 
   @Post('/refresh')

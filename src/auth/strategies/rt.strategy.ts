@@ -12,17 +12,14 @@ export class RtStrategy extends PassportStrategy(Strategy, 'jwt-refresh') {
       secretOrKey: 'rt-secret',
       passReqToCallback: true,
     });
-      console.log('RtStrategy initialized'); // Should appear on server start
   }
 
   validate(req: Request, payload: JwtRefreshPayload) {
     const refreshToken = req.get('Authorization')?.replace('Bearer', '').trim();
-     console.log('RtStrategy validate called!');
-  console.log('Payload from JWT:', payload);
-  console.log('Refresh token from header:', refreshToken);
+
     return {
-    sub: Number(payload.sub),
-          email: payload.email,
+      sub: Number(payload.sub),
+      email: payload.email,
       refreshToken,
     };
   }
