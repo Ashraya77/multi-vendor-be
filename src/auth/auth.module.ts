@@ -7,8 +7,12 @@ import { ConfigModule } from '@nestjs/config';
 import { UsersModule } from 'src/users/users.module';
 import { UsersService } from 'src/users/users.service';
 import { RtStrategy } from './strategies';
+import { AtStrategy } from './strategies';
+import { PassportModule } from '@nestjs/passport';
+
 @Module({
   imports: [
+    PassportModule,
     JwtModule.register({
       secret: 'rt-secret',
       signOptions: { expiresIn: '7d' },
@@ -18,6 +22,6 @@ import { RtStrategy } from './strategies';
     UsersModule,
   ],
   controllers: [AuthController],
-  providers: [AuthService, UsersService, RtStrategy],
+  providers: [AuthService, UsersService, RtStrategy, AtStrategy],
 })
 export class AuthModule {}

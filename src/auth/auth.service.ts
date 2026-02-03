@@ -125,7 +125,7 @@ export class AuthService {
           email,
         },
         {
-          secret: this.configService.get<string>('JWT_ACCESS_SECRET'),
+          secret: 'at-secret',
           expiresIn: '15m',
         },
       ),
@@ -135,7 +135,7 @@ export class AuthService {
           email,
         },
         {
-          secret: this.configService.get<string>('JWT_REFRESH_SECRET'),
+          secret: 'rt-secret',
           expiresIn: '7d',
         },
       ),

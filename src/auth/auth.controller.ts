@@ -6,6 +6,7 @@ import {
   Req,
   HttpCode,
   HttpStatus,
+  Get,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { AuthDto } from './dto/auth.dto';
@@ -13,6 +14,8 @@ import { SignupResponseDto } from './dto/SignupResponse';
 import { LoginDto } from './dto/Logindata.dto';
 import { AuthGuard } from '@nestjs/passport';
 import type { Request } from 'express';
+import { Roles, Role } from './decorators/roles.decorator';
+import { RolesGuard } from './guards/roles.guard';
 
 @Controller('auth')
 export class AuthController {
@@ -48,5 +51,12 @@ export class AuthController {
     },
   ) {
     return this.authService.refreshTokens(req.user.sub, req.user.refreshToken);
+  }
+
+  @Get('user-only')
+  @UseGuards(AuthGuard('at'), RolesGuard)
+  @Roles(Role.user)
+  userOnly() {
+    return 'This is for users only';
   }
 }
