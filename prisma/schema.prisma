@@ -154,6 +154,6 @@ enum OrderStatus {
 
 enum Role {
   user
-  seller
+  
   admin
 }

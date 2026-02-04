@@ -8,6 +8,7 @@ import { PrismaService } from './prisma/prisma.service';
 import { ProductsModule } from './products/products.module';
 import { PassportModule } from '@nestjs/passport';
 import { ConfigModule } from '@nestjs/config';
+import { AtStrategy } from './auth/strategies';
 
 @Module({
   imports: [
@@ -21,6 +22,13 @@ import { ConfigModule } from '@nestjs/config';
     PassportModule.register({ defaultStrategy: 'jwt' }),
   ],
   controllers: [AppController],
-  providers: [AppService, PrismaService],
+  providers: [
+    AppService,
+    PrismaService,
+    {
+      provide: 'APP_GUARD',
+      useClass: AtStrategy,
+    },
+  ],
 })
 export class AppModule {}

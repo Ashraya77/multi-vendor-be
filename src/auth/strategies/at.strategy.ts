@@ -11,11 +11,9 @@ export class AtStrategy extends PassportStrategy(Strategy, 'at') {
       ignoreExpiration: false,
       secretOrKey: 'at-secret',
     });
-    console.log("AtStrategy initialized")
   }
 
   async validate(payload: any) {
-    console.log("AtStrategy validate called with payload:", payload);
     const user = await this.prisma.user.findUnique({
       where: {
         id: payload.sub,
@@ -25,7 +23,6 @@ export class AtStrategy extends PassportStrategy(Strategy, 'at') {
     if (!user) {
       throw new UnauthorizedException();
     }
-    console.log("AtStrategy validated user:", user);
     return user;
   }
 }

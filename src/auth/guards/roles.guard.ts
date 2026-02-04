@@ -11,7 +11,7 @@ import { ROLES_KEY } from '../decorators/roles.decorator';
 
 @Injectable()
 export class RolesGuard implements CanActivate {
-  constructor(private reflector: Reflector) {}
+  constructor(private reflector: Reflector) {} //Reflector lets a guard read metadata that you attached using decorators.
 
   canActivate(
     context: ExecutionContext,
@@ -21,17 +21,12 @@ export class RolesGuard implements CanActivate {
       [context.getHandler(), context.getClass()],
     );
 
-    console.log('Required roles:', requiredRoles);
-
     if (!requiredRoles) {
       return true;
     }
 
     const request = context.switchToHttp().getRequest();
     const user = request.user;
-
-    console.log('User object:', user);
-    console.log('User role:', user?.role);
 
     if (!user) {
       throw new ForbiddenException('User not authenticated');
@@ -42,7 +37,6 @@ export class RolesGuard implements CanActivate {
     }
 
     const hasRole = matchRoles(requiredRoles, user.role);
-    console.log('Has required role:', hasRole);
 
     return hasRole;
   }
@@ -53,8 +47,6 @@ function matchRoles(
   userRoles: string | string[],
 ): boolean {
   const roles = Array.isArray(userRoles) ? userRoles : [userRoles];
-
-  console.log('Matching:', requiredRoles, 'against', roles);
 
   if (!roles || roles.length === 0) {
     return false;
