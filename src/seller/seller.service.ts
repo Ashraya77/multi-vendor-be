@@ -78,32 +78,30 @@ export class SellerService {
       throw new ConflictException('Selller is already verified');
     }
 
-    if (dto.approve) {
-      const [updatedSeller] = await this.prisma.$transaction([
-        this.prisma.seller.update({
-          where: { id: sellerId },
-          data: { isVerified: true },
-        }),
-      ]);
+    if (dto.approve == true) {
+      const updatedSeller = await this.prisma.seller.update({
+        where: { id: sellerId },
+        data: { isVerified: true },
+      });
+
       return {
         id: updatedSeller.id,
         userId: updatedSeller.userId,
         businessName: updatedSeller.businessName,
         isVerified: true,
-        message: 'Seller verified successfully. User role updated to seller.',
-      };
-    } else {
-      if (!dto.approve) {
-        throw new BadRequestException('rejection reason required');
-      }
-
-      await this.prisma.seller.delete({
-        where: { id: sellerId },
-      });
-      return {
-        message: 'Seller application rejected and removed.',
-        reason: dto.reason,
+        message: 'Seller verified successfully.',
       };
     }
+    if (!dto.approve) {
+      throw new BadRequestException('rejection reason required');
+    }
+
+    await this.prisma.seller.delete({
+      where: { id: sellerId },
+    });
+    return {
+      message: 'Seller application rejected and removed.',
+      reason: dto.reason,
+    };
   }
 }
