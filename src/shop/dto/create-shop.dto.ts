@@ -1,7 +1,7 @@
 // shop.dto.ts
 export class CreateShopDto {
   sellerId: string;
-  businessName: string;
+  name: string;
   description?: string;
   logo?: string;
   address?: string;

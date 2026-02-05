@@ -1,5 +1,5 @@
 import {
-  ConflictException,
+  
   Injectable,
   NotFoundException,
   UnauthorizedException,
@@ -31,7 +31,11 @@ export class ShopService {
 
     return this.prisma.shop.create({
       data: {
-        name: dto.businessName,
+        name: seller.businessName,
+        logo: dto.logo,
+        description: dto.description,
+        address: dto.address,
+
         seller: {
           connect: { id: sellerId },
         },

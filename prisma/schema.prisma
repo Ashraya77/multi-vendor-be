@@ -32,7 +32,7 @@ model User {
 model Seller {
   id           String   @id @default(cuid())
   userId       Int      @unique  
-  businessName String?
+  businessName String
   phone        String?
   isVerified   Boolean  @default(false)
   createdAt    DateTime @default(now())
