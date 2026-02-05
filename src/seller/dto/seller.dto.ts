@@ -1,6 +1,6 @@
 export class applySellerDto {
   userId: string;
-  businessName: string;
+  name: string;
   phone: string;
   isVerified: boolean;
 }

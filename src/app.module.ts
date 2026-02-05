@@ -9,6 +9,7 @@ import { ProductsModule } from './products/products.module';
 import { PassportModule } from '@nestjs/passport';
 import { ConfigModule } from '@nestjs/config';
 import { AtStrategy } from './auth/strategies';
+import { ShopModule } from './shop/shop.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { AtStrategy } from './auth/strategies';
     SellerModule,
     ProductsModule,
     PassportModule.register({ defaultStrategy: 'jwt' }),
+    ShopModule,
   ],
   controllers: [AppController],
   providers: [

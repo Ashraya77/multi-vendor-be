@@ -36,7 +36,7 @@ export class SellerService {
     const seller = await this.prisma.seller.create({
       data: {
         userId,
-        businessName: dto.businessName,
+        businessName: dto.name,
         phone: dto.phone,
       },
       include: {
