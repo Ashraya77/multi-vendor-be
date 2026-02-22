@@ -11,3 +11,4 @@ import { AuthModule } from 'src/auth/auth.module';
   exports: [SellerService],
 })
 export class SellerModule {}
+ 
