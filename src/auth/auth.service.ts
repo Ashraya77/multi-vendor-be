@@ -27,7 +27,6 @@ export class AuthService {
   async signupLocal(dto: AuthDto): Promise<SignupResponseDto> {
     try {
       const normalizedEmail = dto.email.toLowerCase().trim();
-
       const existingUser = await this.prisma.user.findUnique({
         where: {
           email: normalizedEmail,

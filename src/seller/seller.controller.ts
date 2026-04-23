@@ -14,18 +14,18 @@ import { VerifySellerDto } from './dto/verify-seller.dto';
 import { Role, Roles } from 'src/auth/decorators/roles.decorator';
 import { CurrentUser } from 'src/auth/decorators/current-user.decorator';
 
+@UseGuards(AuthGuard('at'))
 @Controller('seller')
 export class SellerController {
   constructor(private readonly sellerService: SellerService) {}
 
   @Post('apply')
-  @UseGuards(AuthGuard('at'))
   async applyForSeller(@Body() dto: applySellerDto) {
     return this.sellerService.applyForSeller(dto);
   }
 
   @Post(':sellerId/verify')
-  @UseGuards(AuthGuard('at'), RolesGuard)
+  @UseGuards(AuthGuard('at'), RolesGuard) 
   @Roles(Role.admin)
   async verify(
     @Param('sellerId') sellerId: string,

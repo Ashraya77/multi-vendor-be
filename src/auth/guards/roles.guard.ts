@@ -11,7 +11,7 @@ import { ROLES_KEY } from '../decorators/roles.decorator';
 
 @Injectable()
 export class RolesGuard implements CanActivate {
-  constructor(private reflector: Reflector) {} //Reflector lets a guard read metadata that you attached using decorators.
+  constructor(private reflector: Reflector) {} //Reflector lets a guard read metadata that you attached using decorators. like @Roles('smth smth')
 
   canActivate(
     context: ExecutionContext,
@@ -21,6 +21,7 @@ export class RolesGuard implements CanActivate {
       [context.getHandler(), context.getClass()],
     );
 
+    //if a route has no @Roles() then its public or handled by aother guard
     if (!requiredRoles) {
       return true;
     }
