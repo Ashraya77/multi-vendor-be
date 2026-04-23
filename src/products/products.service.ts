@@ -42,6 +42,19 @@ export class ProductsService {
   async findAll() {
     return await this.prisma.product.findMany();
   }
+  
+  async findThem(query?: { search?: string }) {
+    return this.prisma.product.findMany({
+      where: query?.search
+        ? {
+            name: {
+              contains: query.search,
+              mode: 'insensitive',
+            },
+          }
+        : {},
+    });
+  }
 
   async findOne(id: string) {
     const product = await this.prisma.product.findUnique({
